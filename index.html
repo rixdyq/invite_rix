@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rix Music: bot musik untuk voice channel Discord</title>
+<meta name="description" content="Rix Music memutar lagu dari YouTube di voice channel Discord. Ketik #play diikuti judul lagu.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%B5%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1c1b3a;--bg2:#15142e;--surface:#26244d;--line:#3a376b;--text:#f1eefc;--muted:#b4afd6;--pink:#ff5d8f;--mint:#5de0c8}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(900px 480px at 88% -8%,#3d2b78 0,transparent 62%),var(--bg);color:var(--text);font:400 1.0625rem/1.65 Figtree,system-ui,sans-serif;min-height:100vh}
+.wrap{max-width:1060px;margin:0 auto;padding:0 1.25rem}
+h1,h2,.logo{font-family:'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;line-height:1.08}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--mint);outline-offset:3px;border-radius:4px}
+
+header .wrap{display:flex;justify-content:space-between;align-items:center;padding-top:1.25rem;padding-bottom:1.25rem}
+.logo{font-size:1.4rem;font-weight:800;text-decoration:none}
+.logo b{color:var(--pink)}
+nav{display:flex;gap:1.4rem;font-weight:500;color:var(--muted)}
+nav a{text-decoration:none}
+nav a:hover{color:var(--text)}
+
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:3rem;align-items:center;padding:3.5rem 0 5rem}
+h1{font-size:clamp(2.4rem,6vw,4rem);font-weight:800}
+.lead{color:var(--muted);max-width:34ch;margin:1.2rem 0 1.8rem;font-size:1.15rem}
+.btn{display:inline-block;background:var(--pink);color:#1c1b3a;font-weight:600;padding:.9rem 1.5rem;border-radius:999px;text-decoration:none;transition:transform .15s}
+.btn:hover{transform:translateY(-2px)}
+.note{color:var(--muted);font-size:.95rem;margin-top:1rem;max-width:44ch}
+.note[hidden]{display:none}
+.warn{color:var(--pink)}
+.facts{list-style:none;padding:0;margin-top:2.2rem;display:grid;gap:.5rem}
+.facts li{border-left:3px solid var(--mint);padding-left:.8rem;color:var(--muted)}
+
+/* tiruan chat Discord */
+.chat{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:1.2rem;font-size:.95rem}
+.msg{display:flex;gap:.75rem}
+.msg+.msg{margin-top:1.1rem}
+.av{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;color:#1c1b3a}
+.who{font-weight:600}
+.who small{color:var(--muted);font-weight:400;margin-left:.4rem}
+.cmd-text{color:var(--text)}
+.cmd-text span{color:var(--mint);font-weight:600}
+.embed{border-left:4px solid var(--pink);background:var(--surface);border-radius:6px;padding:.85rem 1rem;margin-top:.45rem}
+.embed strong{display:block;font-size:1.02rem}
+.embed .meta{color:var(--muted);font-size:.88rem}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin:.8rem 0 .5rem}
+.bar i{display:block;height:100%;width:0;background:var(--pink);animation:prog 24s linear infinite}
+.row{display:flex;justify-content:space-between;align-items:flex-end}
+.eq{display:flex;gap:3px;align-items:flex-end;height:22px}
+.eq span{width:4px;height:30%;background:var(--mint);border-radius:2px;animation:eq 1s ease-in-out infinite}
+.eq span:nth-child(2){animation-delay:-.7s}.eq span:nth-child(3){animation-delay:-.3s}
+.eq span:nth-child(4){animation-delay:-.9s}.eq span:nth-child(5){animation-delay:-.5s}
+.ctl{display:flex;gap:.4rem;margin-top:.8rem}
+.ctl span{background:var(--line);border-radius:6px;padding:.15rem .6rem;font-size:.9rem}
+@keyframes prog{to{width:100%}}
+@keyframes eq{50%{height:100%}}
+
+section{padding:3.5rem 0;border-top:1px solid var(--line)}
+h2{font-size:clamp(1.7rem,4vw,2.3rem);font-weight:800;margin-bottom:.5rem}
+.sub{color:var(--muted);margin-bottom:2rem;max-width:56ch}
+.cmds{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:0 3rem}
+.cmd{display:flex;gap:1rem;padding:.85rem 0;border-bottom:1px solid var(--line)}
+.cmd code{flex:none;width:11.5rem;font:600 .93rem ui-monospace,Menlo,Consolas,monospace;color:var(--mint)}
+.cmd span{color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:2rem;list-style:none;padding:0;counter-reset:s}
+.steps li::before{counter-increment:s;content:counter(s);display:block;font:800 2.8rem/1 'Bricolage Grotesque',system-ui,sans-serif;color:var(--pink);margin-bottom:.5rem}
+.steps b{display:block;font-size:1.1rem;margin-bottom:.2rem}
+.steps p{color:var(--muted)}
+.cta{text-align:left}
+footer{border-top:1px solid var(--line);padding:1.8rem 0 2.5rem;color:var(--muted);font-size:.9rem}
+
+@media(max-width:860px){
+  .hero{grid-template-columns:1fr;padding:2rem 0 3.5rem}
+  .cmd{flex-direction:column;gap:.1rem}
+  .cmd code{width:auto}
+  nav{gap:1rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .bar i{animation:none;width:35%}
+  .eq span{animation:none;height:60%}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="logo" href="#">Rix<b>Music</b></a>
+    <nav><a href="#perintah">Perintah</a><a href="#cara">Cara pakai</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Putar musik di voice channel dengan satu pesan.</h1>
+      <p class="lead">Rix Music mencari lagu di YouTube dari judul atau link, mengantrekannya, lalu memutarnya di server Discord kamu.</p>
+      <a class="btn" data-invite href="#">Undang Rix Music ke servermu</a>
+      <p class="note warn" id="warn" hidden>Client ID belum diisi. Buka index.html, lalu ganti ISI_CLIENT_ID_DI_SINI dengan Client ID aplikasimu.</p>
+      <p class="note">Kamu perlu izin Manage Server di server tujuan.</p>
+      <ul class="facts">
+        <li>Cari lewat judul lagu, link YouTube, atau playlist</li>
+        <li>Antrean, loop, acak, dan autoplay lagu serupa</li>
+        <li>Tombol kontrol langsung di pesan bot</li>
+      </ul>
+    </div>
+
+    <div class="chat" role="img" aria-label="Contoh percakapan: pengguna mengetik #play coldplay yellow, lalu bot menampilkan lagu yang sedang diputar.">
+      <div class="msg">
+        <div class="av" style="background:var(--mint)">K</div>
+        <div>
+          <div class="who">kamu<small>hari ini</small></div>
+          <div class="cmd-text"><span>#play</span> coldplay yellow</div>
+        </div>
+      </div>
+      <div class="msg">
+        <div class="av" style="background:var(--pink)">R</div>
+        <div style="flex:1;min-width:0">
+          <div class="who">Rix Music<small>bot</small></div>
+          <div class="embed">
+            <span class="meta">Sekarang memutar</span>
+            <strong>Yellow</strong>
+            <span class="meta">Coldplay</span>
+            <div class="bar"><i></i></div>
+            <div class="row"><span class="meta">Durasi 4:29</span><div class="eq" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div></div>
+          </div>
+          <div class="ctl" aria-hidden="true"><span>⏯</span><span>⏭</span><span>⏹</span><span>🔀</span><span>🔁</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="perintah">
+    <h2>Perintah</h2>
+    <p class="sub">Semua perintah diawali tanda #. Singkatan ada di dalam tanda kurung.</p>
+    <div class="cmds" id="cmds"></div>
+  </section>
+
+  <section id="cara">
+    <h2>Cara pakai</h2>
+    <p class="sub">Tiga langkah, tidak perlu pengaturan tambahan.</p>
+    <ol class="steps">
+      <li><b>Undang bot</b><p>Tekan tombol undang, pilih servermu, lalu setujui izin yang diminta.</p></li>
+      <li><b>Masuk voice channel</b><p>Bot hanya memutar lagu di channel tempat kamu sedang berada.</p></li>
+      <li><b>Ketik #play</b><p>Tulis judul atau tempel link YouTube. Lagu langsung diputar atau masuk antrean.</p></li>
+    </ol>
+  </section>
+
+  <section class="cta">
+    <h2>Siap memutar lagu?</h2>
+    <p class="sub">Undang bot ke server dan coba perintah pertamamu.</p>
+    <a class="btn" data-invite href="#">Undang Rix Music ke servermu</a>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Rix Music tidak berafiliasi dengan Discord maupun YouTube.</div>
+</footer>
+
+<script>
+// Ganti nilai di bawah dengan Client ID aplikasimu (Developer Portal > General Information)
+const CLIENT_ID = '1560431301209620610';
+
+const invite = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&permissions=3230720&integration_type=0&scope=bot+applications.commands`;
+const ready = /^\d{15,25}$/.test(CLIENT_ID);
+document.querySelectorAll('[data-invite]').forEach(a => {
+  a.href = ready ? invite : '#';
+  a.addEventListener('click', e => {
+    if (!ready) { e.preventDefault(); document.getElementById('warn').hidden = false; }
+  });
+});
+
+const commands = [
+  ['#play judul/link', 'Putar lagu atau playlist (#p)'],
+  ['#skip', 'Lewati lagu sekarang (#s)'],
+  ['#pause / #resume', 'Jeda dan lanjutkan lagu'],
+  ['#stop', 'Berhenti dan keluar dari voice (#dc)'],
+  ['#queue', 'Lihat antrean lagu (#q)'],
+  ['#nowplaying', 'Lagu sekarang beserta progresnya (#np)'],
+  ['#shuffle', 'Acak urutan antrean'],
+  ['#remove nomor', 'Hapus satu lagu dari antrean'],
+  ['#clear', 'Kosongkan antrean'],
+  ['#volume 1-100', 'Atur volume (#vol)'],
+  ['#loop mode', 'off, track, queue, atau autoplay'],
+  ['#filter nama', 'Bassboost, nightcore, vaporwave, 8d, karaoke'],
+  ['#help', 'Tampilkan daftar perintah di Discord']
+];
+document.getElementById('cmds').innerHTML = commands
+  .map(([c, d]) => `<div class="cmd"><code>${c}</code><span>${d}</span></div>`).join('');
+</script>
+</body>
+</html>
