@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rix Music: bot musik untuk voice channel Discord</title>
+<meta name="description" content="Rix Music memutar lagu dari YouTube di voice channel Discord. Ketik /play lalu isi judul lagunya.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%B5%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1c1b3a;--bg2:#15142e;--surface:#26244d;--line:#3a376b;--text:#f1eefc;--muted:#b4afd6;--pink:#ff5d8f;--mint:#5de0c8}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(900px 480px at 88% -8%,#3d2b78 0,transparent 62%),var(--bg);color:var(--text);font:400 1.0625rem/1.65 Figtree,system-ui,sans-serif;min-height:100vh}
+.wrap{max-width:1060px;margin:0 auto;padding:0 1.25rem}
+h1,h2,.logo{font-family:'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.02em;line-height:1.08}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--mint);outline-offset:3px;border-radius:4px}
+.pfp{border-radius:50%;object-fit:cover;background:#fff;border:2px solid var(--pink);flex:none}
+
+header .wrap{display:flex;justify-content:space-between;align-items:center;padding-top:1.25rem;padding-bottom:1.25rem}
+.logo{display:inline-flex;align-items:center;gap:.6rem;font-size:1.4rem;font-weight:800;text-decoration:none}
+.logo b{color:var(--pink)}
+nav{display:flex;gap:1.4rem;font-weight:500;color:var(--muted)}
+nav a{text-decoration:none}
+nav a:hover{color:var(--text)}
+
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:3rem;align-items:center;padding:3.5rem 0 5rem}
+h1{font-size:clamp(2.4rem,6vw,4rem);font-weight:800}
+.lead{color:var(--muted);max-width:34ch;margin:1.2rem 0 1.8rem;font-size:1.15rem}
+.btn{display:inline-block;background:var(--pink);color:#1c1b3a;font-weight:600;padding:.9rem 1.5rem;border-radius:999px;text-decoration:none;transition:transform .15s}
+.btn:hover{transform:translateY(-2px)}
+.note{color:var(--muted);font-size:.95rem;margin-top:1rem;max-width:44ch}
+.note[hidden]{display:none}
+.warn{color:var(--pink)}
+.facts{list-style:none;padding:0;margin-top:2.2rem;display:grid;gap:.5rem}
+.facts li{border-left:3px solid var(--mint);padding-left:.8rem;color:var(--muted)}
+
+/* tiruan chat Discord */
+.chat{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:1.2rem;font-size:.95rem}
+.msg{display:flex;gap:.75rem}
+.msg+.msg{margin-top:1.1rem}
+.av{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;color:#1c1b3a}
+.who{font-weight:600}
+.who small{color:var(--muted);font-weight:400;margin-left:.4rem}
+.cmd-text{color:var(--text)}
+.cmd-text span{color:var(--mint);font-weight:600}
+.embed{border-left:4px solid var(--pink);background:var(--surface);border-radius:6px;padding:.85rem 1rem;margin-top:.45rem}
+.embed strong{display:block;font-size:1.02rem}
+.embed .meta{color:var(--muted);font-size:.88rem}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin:.8rem 0 .5rem}
+.bar i{display:block;height:100%;width:0;background:var(--pink);animation:prog 24s linear infinite}
+.row{display:flex;justify-content:space-between;align-items:flex-end}
+.eq{display:flex;gap:3px;align-items:flex-end;height:22px}
+.eq span{width:4px;height:30%;background:var(--mint);border-radius:2px;animation:eq 1s ease-in-out infinite}
+.eq span:nth-child(2){animation-delay:-.7s}.eq span:nth-child(3){animation-delay:-.3s}
+.eq span:nth-child(4){animation-delay:-.9s}.eq span:nth-child(5){animation-delay:-.5s}
+.ctl{display:flex;gap:.4rem;margin-top:.8rem}
+.ctl span{background:var(--line);border-radius:6px;padding:.15rem .6rem;font-size:.9rem}
+@keyframes prog{to{width:100%}}
+@keyframes eq{50%{height:100%}}
+
+section{padding:3.5rem 0;border-top:1px solid var(--line)}
+h2{font-size:clamp(1.7rem,4vw,2.3rem);font-weight:800;margin-bottom:.5rem}
+.sub{color:var(--muted);margin-bottom:2rem;max-width:56ch}
+.cmds{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:0 3rem}
+.cmd{display:flex;gap:1rem;padding:.85rem 0;border-bottom:1px solid var(--line)}
+.cmd code{flex:none;width:11.5rem;font:600 .93rem ui-monospace,Menlo,Consolas,monospace;color:var(--mint)}
+.cmd span{color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:2rem;list-style:none;padding:0;counter-reset:s}
+.steps li::before{counter-increment:s;content:counter(s);display:block;font:800 2.8rem/1 'Bricolage Grotesque',system-ui,sans-serif;color:var(--pink);margin-bottom:.5rem}
+.steps b{display:block;font-size:1.1rem;margin-bottom:.2rem}
+.steps p{color:var(--muted)}
+.cta{text-align:left}
+footer{border-top:1px solid var(--line);padding:1.8rem 0 2.5rem;color:var(--muted);font-size:.9rem}
+
+@media(max-width:860px){
+  .hero{grid-template-columns:1fr;padding:2rem 0 3.5rem}
+  .cmd{flex-direction:column;gap:.1rem}
+  .cmd code{width:auto}
+  nav{gap:1rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .bar i{animation:none;width:35%}
+  .eq span{animation:none;height:60%}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="logo" href="#"><img class="pfp" data-pfp width="38" height="38" alt="">Rix<b>Music</b></a>
+    <nav><a href="#perintah">Perintah</a><a href="#cara">Cara pakai</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Putar musik di voice channel dengan satu pesan.</h1>
+      <p class="lead">Rix Music mencari lagu di YouTube dari judul atau link, mengantrekannya, lalu memutarnya di server Discord kamu.</p>
+      <a class="btn" data-invite href="#">Undang Rix Music ke servermu</a>
+      <p class="note warn" id="warn" hidden>Client ID belum diisi. Buka index.html, lalu ganti ISI_CLIENT_ID_DI_SINI dengan Client ID aplikasimu.</p>
+      <p class="note">Kamu perlu izin Manage Server di server tujuan.</p>
+      <ul class="facts">
+        <li>Cari lewat judul lagu, link YouTube, atau playlist</li>
+        <li>Antrean, loop, acak, dan autoplay lagu serupa</li>
+        <li>Tombol kontrol langsung di pesan bot</li>
+      </ul>
+    </div>
+
+    <div class="chat" role="img" aria-label="Contoh percakapan: pengguna mengetik /play coldplay yellow, lalu bot menampilkan lagu yang sedang diputar.">
+      <div class="msg">
+        <div class="av" style="background:var(--mint)">K</div>
+        <div>
+          <div class="who">kamu<small>hari ini</small></div>
+          <div class="cmd-text"><span>/play</span> query: coldplay yellow</div>
+        </div>
+      </div>
+      <div class="msg">
+        <img class="av pfp" data-pfp width="38" height="38" alt="">
+        <div style="flex:1;min-width:0">
+          <div class="who">Rix Music<small>bot</small></div>
+          <div class="embed">
+            <span class="meta">Sekarang memutar</span>
+            <strong>Yellow</strong>
+            <span class="meta">Coldplay</span>
+            <div class="bar"><i></i></div>
+            <div class="row"><span class="meta">Durasi 4:29</span><div class="eq" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div></div>
+          </div>
+          <div class="ctl" aria-hidden="true"><span>⏯</span><span>⏭</span><span>⏹</span><span>🔀</span><span>🔁</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="perintah">
+    <h2>Perintah</h2>
+    <p class="sub">Ketik / di kolom chat, lalu pilih perintah dari daftar yang muncul.</p>
+    <div class="cmds" id="cmds"></div>
+  </section>
+
+  <section id="cara">
+    <h2>Cara pakai</h2>
+    <p class="sub">Tiga langkah, tidak perlu pengaturan tambahan.</p>
+    <ol class="steps">
+      <li><b>Undang bot</b><p>Tekan tombol undang, pilih servermu, lalu setujui izin yang diminta.</p></li>
+      <li><b>Masuk voice channel</b><p>Bot hanya memutar lagu di channel tempat kamu sedang berada.</p></li>
+      <li><b>Ketik /play</b><p>Isi judul atau tempel link YouTube. Lagu langsung diputar atau masuk antrean.</p></li>
+    </ol>
+  </section>
+
+  <section class="cta">
+    <h2>Siap memutar lagu?</h2>
+    <p class="sub">Undang bot ke server dan coba perintah pertamamu.</p>
+    <a class="btn" data-invite href="#">Undang Rix Music ke servermu</a>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Rix Music tidak berafiliasi dengan Discord maupun YouTube.</div>
+</footer>
+
+<script>
+const PFP = 'data:image/jpeg;base64,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';
+document.querySelectorAll('img[data-pfp]').forEach(i => { i.src = PFP; });
+document.querySelector('link[rel="icon"]').href = PFP;
+
+const CLIENT_ID = '1560431301209620610';
+
+const invite = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&permissions=3230720&integration_type=0&scope=bot+applications.commands`;
+const ready = /^\d{15,25}$/.test(CLIENT_ID);
+document.querySelectorAll('[data-invite]').forEach(a => {
+  a.href = ready ? invite : '#';
+  a.addEventListener('click', e => {
+    if (!ready) { e.preventDefault(); document.getElementById('warn').hidden = false; }
+  });
+});
+
+const commands = [
+  ['/play query', 'Putar lagu atau playlist dari judul atau link YouTube'],
+  ['/skip', 'Lewati lagu sekarang'],
+  ['/pause dan /resume', 'Jeda dan lanjutkan lagu'],
+  ['/stop', 'Berhenti dan keluar dari voice'],
+  ['/queue', 'Lihat antrean lagu'],
+  ['/nowplaying', 'Lagu sekarang beserta progresnya'],
+  ['/shuffle', 'Acak urutan antrean'],
+  ['/remove nomor', 'Hapus satu lagu dari antrean'],
+  ['/clear', 'Kosongkan antrean'],
+  ['/volume persen', 'Atur volume 1-100'],
+  ['/loop mode', 'Mati, lagu ini, seluruh antrean, atau autoplay'],
+  ['/filter nama', 'Bassboost, nightcore, vaporwave, 8D, karaoke']
+];
+document.getElementById('cmds').innerHTML = commands
+  .map(([c, d]) => `<div class="cmd"><code>${c}</code><span>${d}</span></div>`).join('');
+</script>
+</body>
+</html>
